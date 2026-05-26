@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SenaiNotas — Calculadora de Médias</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0e0f13;
+    --surface: #16181f;
+    --surface2: #1e2029;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #f0f0ec;
+    --muted: #6b6e7a;
+    --accent: #c8f55a;
+    --accent-dim: rgba(200,245,90,0.1);
+    --accent-dim2: rgba(200,245,90,0.18);
+    --danger: #ff5e5e;
+    --danger-dim: rgba(255,94,94,0.12);
+    --warn: #ffbb33;
+    --warn-dim: rgba(255,187,51,0.12);
+    --radius: 14px;
+    --radius-sm: 8px;
+    --font-display: 'DM Serif Display', serif;
+    --font-body: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* --- BG TEXTURE --- */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 0%, rgba(200,245,90,0.055) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 90% 100%, rgba(100,80,255,0.04) 0%, transparent 55%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* --- LAYOUT --- */
+  .wrapper { position: relative; z-index: 1; max-width: 780px; margin: 0 auto; padding: 0 20px 80px; }
+
+  /* --- HEADER --- */
+  header {
+    padding: 52px 0 44px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    border-bottom: 0.5px solid var(--border);
+    margin-bottom: 44px;
+  }
+  .logo-block {}
+  .logo-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(36px, 7vw, 54px);
+    font-weight: 400;
+    line-height: 1;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  h1 em { font-style: italic; color: var(--accent); }
+  .meta-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-dim);
+    border: 0.5px solid rgba(200,245,90,0.2);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 5px 11px;
+    border-radius: 999px;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+  .meta-tag::before { content: ''; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; }
+
+  /* --- SECTION TITLE --- */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .section-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    border: 0.5px solid var(--border2);
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.1em;
+  }
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* --- TABS --- */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 5px;
+    margin-bottom: 28px;
+  }
+  .tab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+  }
+  .tab-btn.active {
+    background: var(--surface2);
+    color: var(--text);
+    border: 0.5px solid var(--border2);
+  }
+
+  /* --- CARD --- */
+  .card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 28px 24px;
+    margin-bottom: 16px;
+  }
+
+  /* --- MATERIA INPUT --- */
+  .field-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    display: block;
+  }
+  input[type="text"], input[type="number"] {
+    width: 100%;
+    background: var(--bg);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    padding: 11px 14px;
+    outline: none;
+    transition: border-color 0.18s;
+    -moz-appearance: textfield;
+  }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+  input:focus { border-color: rgba(200,245,90,0.4); }
+  input::placeholder { color: var(--muted); }
+
+  /* --- NOTAS GRID --- */
+  .notas-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-top: 20px;
+  }
+  @media (max-width: 480px) { .notas-grid { grid-template-columns: 1fr; } }
+
+  .nota-field {
+    background: var(--surface2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    position: relative;
+    transition: border-color 0.18s;
+  }
+  .nota-field:focus-within { border-color: rgba(200,245,90,0.3); }
+
+  .nota-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .nota-tag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+  }
+  .peso-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    background: var(--bg);
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 0.5px solid var(--border);
+  }
+
+  .nota-field input[type="number"] {
+    background: transparent;
+    border: none;
+    padding: 0;
+    font-size: 26px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    letter-spacing: -0.02em;
+  }
+  .nota-field input:focus { border: none; }
+
+  /* Toggle "tem essa nota?" */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .toggle-label { font-size: 11px; color: var(--muted); }
+  .toggle {
+    position: relative;
+    width: 30px;
+    height: 17px;
+    cursor: pointer;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-track {
+    position: absolute;
+    inset: 0;
+    background: var(--bg);
+    border: 0.5px solid var(--border2);
+    border-radius: 999px;
+    transition: 0.2s;
+  }
+  .toggle input:checked + .toggle-track { background: var(--accent-dim2); border-color: rgba(200,245,90,0.4); }
+  .toggle-thumb {
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 11px; height: 11px;
+    background: var(--muted);
+    border-radius: 50%;
+    transition: 0.2s;
+  }
+  .toggle input:checked ~ .toggle-thumb { transform: translateX(13px); background: var(--accent); }
+
+  .nota-field.disabled { opacity: 0.45; }
+  .nota-field.disabled input { pointer-events: none; }
+
+  /* --- BUTTON --- */
+  .btn-calcular {
+    width: 100%;
+    margin-top: 20px;
+    background: var(--accent);
+    color: #0e0f13;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .btn-calcular:hover { filter: brightness(1.08); transform: translateY(-1px); }
+  .btn-calcular:active { transform: translateY(0); filter: brightness(0.95); }
+  .btn-calcular:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+  /* --- RESULTADO --- */
+  #resultado { display: none; }
+  #resultado.visible { display: block; }
+
+  .resultado-card {
+    border-radius: var(--radius);
+    padding: 28px 28px 24px;
+    border: 0.5px solid var(--border);
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .resultado-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--surface);
+    z-index: 0;
+  }
+  .resultado-card.aprovado::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    z-index: 1;
+  }
+  .resultado-card.reprovado::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--danger);
+    z-index: 1;
+  }
+  .resultado-card.aviso::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--warn);
+    z-index: 1;
+  }
+  .resultado-card > * { position: relative; z-index: 2; }
+
+  .res-materia {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .res-media-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .res-media-valor {
+    font-family: var(--font-display);
+    font-size: 68px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .res-media-valor.aprovado { color: var(--accent); }
+  .res-media-valor.reprovado { color: var(--danger); }
+  .res-media-valor.neutro { color: var(--warn); }
+
+  .res-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin-top: 12px;
+    padding: 6px 14px;
+    border-radius: 999px;
+  }
+  .res-status.aprovado { background: var(--accent-dim); color: var(--accent); }
+  .res-status.reprovado { background: var(--danger-dim); color: var(--danger); }
+  .res-status.aviso { background: var(--warn-dim); color: var(--warn); }
+  .res-status::before { content: ''; width: 6px; height: 6px; background: currentColor; border-radius: 50%; }
+
+  .res-breakdown {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  @media (max-width: 480px) { .res-breakdown { grid-template-columns: repeat(2, 1fr); } }
+  .breakdown-item {
+    background: var(--surface2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    text-align: center;
+  }
+  .bd-tag { font-family: var(--font-mono); font-size: 10px; color: var(--muted); letter-spacing: 0.1em; display: block; margin-bottom: 4px; }
+  .bd-val { font-family: var(--font-mono); font-size: 18px; font-weight: 500; color: var(--text); }
+  .bd-val.vazio { color: var(--muted); }
+
+  /* BARRA DE PROGRESSO */
+  .progress-wrap {
+    margin-top: 20px;
+    border-top: 0.5px solid var(--border);
+    padding-top: 18px;
+  }
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    letter-spacing: 0.08em;
+  }
+  .progress-bar-bg {
+    height: 6px;
+    background: var(--bg);
+    border-radius: 999px;
+    overflow: hidden;
+    border: 0.5px solid var(--border);
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .progress-bar-fill.aprovado { background: var(--accent); }
+  .progress-bar-fill.reprovado { background: var(--danger); }
+  .progress-bar-fill.aviso { background: var(--warn); }
+
+  /* MSG SIMULAÇÃO */
+  .res-sim-msg {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text);
+    padding: 16px 0 0;
+  }
+  .nota-destaque {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 20px;
+    color: var(--warn);
+  }
+  .nota-destaque.impossivel { color: var(--danger); }
+  .nota-destaque.facil { color: var(--accent); }
+
+  /* --- HISTÓRICO --- */
+  .historico-list { display: flex; flex-direction: column; gap: 8px; }
+  .hist-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 13px 16px;
+    animation: slide-in 0.3s ease;
+  }
+  @keyframes slide-in { from { opacity: 0; transform: translateY(-6px); } }
+  .hist-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .hist-dot.aprovado { background: var(--accent); }
+  .hist-dot.reprovado { background: var(--danger); }
+  .hist-dot.aviso { background: var(--warn); }
+  .hist-materia { flex: 1; font-size: 13px; font-weight: 500; color: var(--text); }
+  .hist-media { font-family: var(--font-mono); font-size: 16px; font-weight: 500; color: var(--muted); }
+  .hist-media.aprovado { color: var(--accent); }
+  .hist-media.reprovado { color: var(--danger); }
+  .hist-tipo { font-family: var(--font-mono); font-size: 10px; color: var(--muted); border: 0.5px solid var(--border); padding: 2px 7px; border-radius: 4px; }
+
+  .empty-hist {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 13px;
+    font-style: italic;
+    border: 0.5px dashed var(--border2);
+    border-radius: var(--radius);
+  }
+
+  /* --- PESO INFO --- */
+  .pesos-info {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 480px) { .pesos-info { grid-template-columns: repeat(2,1fr); } }
+  .peso-info-item {
+    background: var(--surface2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px;
+    text-align: center;
+  }
+  .pi-tag { font-family: var(--font-mono); font-size: 10px; color: var(--accent); letter-spacing: 0.1em; }
+  .pi-val { font-family: var(--font-mono); font-size: 20px; font-weight: 500; color: var(--text); display: block; margin-top: 2px; }
+
+  /* TABS CONTENT */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* --- TOAST --- */
+  .toast {
+    position: fixed;
+    bottom: 28px; right: 28px;
+    background: var(--surface2);
+    border: 0.5px solid var(--border2);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.2s;
+    pointer-events: none;
+    z-index: 100;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* BTN LIMPAR */
+  .btn-limpar {
+    background: transparent;
+    border: 0.5px solid var(--border2);
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: 12px;
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.18s;
+    letter-spacing: 0.04em;
+  }
+  .btn-limpar:hover { color: var(--danger); border-color: rgba(255,94,94,0.35); }
+
+  .row-actions { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+
+  /* --- PREVIEW AO VIVO --- */
+  .preview-wrap {
+    margin-top: 16px;
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    background: var(--surface2);
+    transition: border-color 0.25s;
+    display: none;
+  }
+  .preview-wrap.visible { display: block; }
+  .preview-wrap.aprovado { border-color: rgba(200,245,90,0.3); }
+  .preview-wrap.reprovado { border-color: rgba(255,94,94,0.3); }
+  .preview-wrap.aviso { border-color: rgba(255,187,51,0.3); }
+  .preview-wrap.impossivel { border-color: rgba(255,94,94,0.3); }
+
+  .preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .preview-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .preview-label::before {
+    content: '';
+    width: 5px; height: 5px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: blink 1.4s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
+
+  .preview-main {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .preview-numero {
+    font-family: var(--font-display);
+    font-size: 52px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    transition: color 0.25s;
+  }
+  .preview-numero.aprovado { color: var(--accent); }
+  .preview-numero.reprovado { color: var(--danger); }
+  .preview-numero.aviso { color: var(--warn); }
+
+  .preview-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .preview-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.03em;
+  }
+  .preview-badge::before { content: ''; width: 5px; height: 5px; background: currentColor; border-radius: 50%; }
+  .preview-badge.aprovado { background: var(--accent-dim); color: var(--accent); }
+  .preview-badge.reprovado { background: var(--danger-dim); color: var(--danger); }
+  .preview-badge.aviso { background: var(--warn-dim); color: var(--warn); }
+
+  .preview-desc {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+  }
+
+  .preview-bar-wrap { margin-top: 14px; }
+  .preview-bar-bg {
+    height: 4px;
+    background: var(--bg);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .preview-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.4s cubic-bezier(0.22,1,0.36,1), background 0.25s;
+  }
+  .preview-bar-fill.aprovado { background: var(--accent); }
+  .preview-bar-fill.reprovado { background: var(--danger); }
+  .preview-bar-fill.aviso { background: var(--warn); }
+
+  .preview-parcial {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 6px;
+  }
+  @media(max-width:480px){.preview-parcial{grid-template-columns:repeat(2,1fr);}}
+  .pp-item {
+    background: var(--bg);
+    border: 0.5px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 10px;
+    text-align: center;
+  }
+  .pp-tag { font-family: var(--font-mono); font-size: 9px; color: var(--muted); display: block; letter-spacing: 0.1em; }
+  .pp-val { font-family: var(--font-mono); font-size: 15px; font-weight: 500; }
+  .pp-val.ativo { color: var(--text); }
+  .pp-val.vazio { color: var(--border2); }
+  .pp-peso { font-family: var(--font-mono); font-size: 9px; color: var(--muted); display: block; margin-top: 1px; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <header>
+    <div class="logo-block">
+      <p class="logo-eyebrow">Senai Cimatec</p>
+      <h1>Senai<em>Notas</em></h1>
+    </div>
+    <div class="meta-tag">Média mín. 7.0</div>
+  </header>
+
+  <!-- PESOS INFO -->
+  <div class="section-header">
+    <span class="section-num">01</span>
+    <span class="section-title">Pesos das avaliações</span>
+  </div>
+  <div class="pesos-info" style="margin-bottom:36px;">
+    <div class="peso-info-item"><span class="pi-tag">AV1</span><span class="pi-val">25%</span></div>
+    <div class="peso-info-item"><span class="pi-tag">AV2</span><span class="pi-val">25%</span></div>
+    <div class="peso-info-item"><span class="pi-tag">AV3</span><span class="pi-val">30%</span></div>
+    <div class="peso-info-item"><span class="pi-tag">EDAG</span><span class="pi-val">20%</span></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="section-header">
+    <span class="section-num">02</span>
+    <span class="section-title">Calcular</span>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('media')">Calcular média</button>
+    <button class="tab-btn" onclick="switchTab('simular')">Simular nota necessária</button>
+  </div>
+
+  <!-- TAB: CALCULAR MÉDIA -->
+  <div class="tab-content active" id="tab-media">
+    <div class="card">
+      <label class="field-label">Nome da matéria</label>
+      <input type="text" id="m-materia" placeholder="ex: Cálculo I, Física..." />
+
+      <div class="notas-grid">
+        <div class="nota-field">
+          <div class="nota-header">
+            <span class="nota-tag">AV1</span>
+            <span class="peso-tag">25%</span>
+          </div>
+          <input type="number" id="m-av1" min="0" max="10" step="0.1" placeholder="0.0" />
+        </div>
+        <div class="nota-field">
+          <div class="nota-header">
+            <span class="nota-tag">AV2</span>
+            <span class="peso-tag">25%</span>
+          </div>
+          <input type="number" id="m-av2" min="0" max="10" step="0.1" placeholder="0.0" />
+        </div>
+        <div class="nota-field">
+          <div class="nota-header">
+            <span class="nota-tag">AV3</span>
+            <span class="peso-tag">30%</span>
+          </div>
+          <input type="number" id="m-av3" min="0" max="10" step="0.1" placeholder="0.0" />
+        </div>
+        <div class="nota-field">
+          <div class="nota-header">
+            <span class="nota-tag">EDAG</span>
+            <span class="peso-tag">20%</span>
+          </div>
+          <input type="number" id="m-edag" min="0" max="10" step="0.1" placeholder="0.0" />
+        </div>
+      </div>
+      <button class="btn-calcular" onclick="calcularMedia()">Calcular média final</button>
+    </div>
+
+    <div id="resultado-media" class="resultado-card" style="display:none;">
+      <div class="res-materia" id="rmed-materia"></div>
+      <div class="res-media-label">Média final</div>
+      <div class="res-media-valor" id="rmed-valor"></div>
+      <div class="res-status" id="rmed-status"></div>
+      <div class="res-breakdown" id="rmed-breakdown"></div>
+      <div class="progress-wrap">
+        <div class="progress-labels">
+          <span>0.0</span><span>Meta: 7.0</span><span>10.0</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="rmed-bar" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: SIMULAR -->
+  <div class="tab-content" id="tab-simular">
+    <div class="card">
+      <label class="field-label">Nome da matéria</label>
+      <input type="text" id="s-materia" placeholder="ex: Programação, Eletrônica..." />
+
+      <div class="notas-grid">
+        <div class="nota-field" id="sf-av1">
+          <div class="nota-header">
+            <span class="nota-tag">AV1</span>
+            <span class="peso-tag">25%</span>
+          </div>
+          <input type="number" id="s-av1" min="0" max="10" step="0.1" placeholder="—" />
+          <div class="toggle-row">
+            <label class="toggle">
+              <input type="checkbox" id="t-av1" onchange="toggleNota('av1')" />
+              <span class="toggle-track"></span>
+              <span class="toggle-thumb"></span>
+            </label>
+            <span class="toggle-label">Tenho essa nota</span>
+          </div>
+        </div>
+        <div class="nota-field disabled" id="sf-av2">
+          <div class="nota-header">
+            <span class="nota-tag">AV2</span>
+            <span class="peso-tag">25%</span>
+          </div>
+          <input type="number" id="s-av2" min="0" max="10" step="0.1" placeholder="—" />
+          <div class="toggle-row">
+            <label class="toggle">
+              <input type="checkbox" id="t-av2" onchange="toggleNota('av2')" />
+              <span class="toggle-track"></span>
+              <span class="toggle-thumb"></span>
+            </label>
+            <span class="toggle-label">Tenho essa nota</span>
+          </div>
+        </div>
+        <div class="nota-field disabled" id="sf-av3">
+          <div class="nota-header">
+            <span class="nota-tag">AV3</span>
+            <span class="peso-tag">30%</span>
+          </div>
+          <input type="number" id="s-av3" min="0" max="10" step="0.1" placeholder="—" />
+          <div class="toggle-row">
+            <label class="toggle">
+              <input type="checkbox" id="t-av3" onchange="toggleNota('av3')" />
+              <span class="toggle-track"></span>
+              <span class="toggle-thumb"></span>
+            </label>
+            <span class="toggle-label">Tenho essa nota</span>
+          </div>
+        </div>
+        <div class="nota-field disabled" id="sf-edag">
+          <div class="nota-header">
+            <span class="nota-tag">EDAG</span>
+            <span class="peso-tag">20%</span>
+          </div>
+          <input type="number" id="s-edag" min="0" max="10" step="0.1" placeholder="—" />
+          <div class="toggle-row">
+            <label class="toggle">
+              <input type="checkbox" id="t-edag" onchange="toggleNota('edag')" />
+              <span class="toggle-track"></span>
+              <span class="toggle-thumb"></span>
+            </label>
+            <span class="toggle-label">Tenho essa nota</span>
+          </div>
+        </div>
+      </div>
+      <!-- PREVIEW AO VIVO -->
+      <div class="preview-wrap" id="sim-preview">
+        <div class="preview-header">
+          <span class="preview-label">Prévia em tempo real</span>
+          <span class="preview-desc" id="prev-avs-restantes"></span>
+        </div>
+        <div class="preview-main">
+          <div class="preview-numero" id="prev-numero">—</div>
+          <div class="preview-info">
+            <span class="preview-badge" id="prev-badge"></span>
+            <span class="preview-desc" id="prev-desc-texto"></span>
+          </div>
+        </div>
+        <div class="preview-bar-wrap">
+          <div class="preview-bar-bg">
+            <div class="preview-bar-fill" id="prev-bar" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="preview-parcial" id="prev-parcial"></div>
+      </div>
+
+      <button class="btn-calcular" onclick="simularNota()">Confirmar e salvar no histórico</button>
+    </div>
+
+    <div id="resultado-sim" class="resultado-card" style="display:none;">
+      <div class="res-materia" id="rsim-materia"></div>
+      <div id="rsim-conteudo"></div>
+    </div>
+  </div>
+
+  <!-- HISTÓRICO -->
+  <div style="margin-top: 44px;">
+    <div class="section-header" style="margin-bottom:16px;">
+      <span class="section-num">03</span>
+      <span class="section-title">Histórico da sessão</span>
+    </div>
+    <div class="row-actions">
+      <span style="font-size:12px;color:var(--muted);font-family:var(--font-mono);" id="hist-count">0 cálculos</span>
+      <button class="btn-limpar" onclick="limparHistorico()">Limpar histórico</button>
+    </div>
+    <div id="historico-list">
+      <div class="empty-hist">Nenhum cálculo realizado ainda.</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PESOS = { av1: 0.25, av2: 0.25, av3: 0.30, edag: 0.20 };
+const META = 7.0;
+let historico = [];
+let toggles = { av1: false, av2: false, av3: false, edag: false };
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (tab === 'media' && i===0)||(tab === 'simular' && i===1)));
+  document.getElementById('tab-media').classList.toggle('active', tab === 'media');
+  document.getElementById('tab-simular').classList.toggle('active', tab === 'simular');
+}
+
+function toggleNota(av) {
+  const checked = document.getElementById('t-' + av).checked;
+  toggles[av] = checked;
+  const field = document.getElementById('sf-' + av);
+  const input = document.getElementById('s-' + av);
+  field.classList.toggle('disabled', !checked);
+  if (!checked) { input.value = ''; input.placeholder = '—'; input.disabled = true; }
+  else { input.placeholder = '0.0'; input.disabled = false; input.focus(); }
+  atualizarPreview();
+}
+
+function atualizarPreview() {
+  const notas = {};
+  for (const av of ['av1','av2','av3','edag']) {
+    if (toggles[av]) {
+      const v = parseFloat(document.getElementById('s-' + av).value);
+      if (!isNaN(v)) notas[av] = Math.min(10, Math.max(0, v));
+    }
+  }
+
+  const preview = document.getElementById('sim-preview');
+  const temAlgumToggle = Object.values(toggles).some(Boolean);
+
+  if (!temAlgumToggle) { preview.classList.remove('visible'); return; }
+  preview.classList.add('visible');
+
+  const todas = ['av1','av2','av3','edag'];
+  const ativas = todas.filter(k => toggles[k]);
+  const comNota = todas.filter(k => k in notas);
+  const restantes = todas.filter(k => !toggles[k]);
+
+  // Parcial breakdown
+  const parcialEl = document.getElementById('prev-parcial');
+  parcialEl.innerHTML = todas.map(k => {
+    const ativ = toggles[k];
+    const val = notas[k];
+    const pct = Math.round(PESOS[k] * 100);
+    return `<div class="pp-item">
+      <span class="pp-tag">${k.toUpperCase()}</span>
+      <span class="pp-val ${ativ && val !== undefined ? 'ativo' : 'vazio'}">${ativ && val !== undefined ? val.toFixed(1) : '—'}</span>
+      <span class="pp-peso">${pct}%</span>
+    </div>`;
+  }).join('');
+
+  // Se não tem nenhuma nota preenchida ainda, mostra estado neutro
+  if (comNota.length === 0) {
+    document.getElementById('prev-numero').textContent = '—';
+    document.getElementById('prev-numero').className = 'preview-numero aviso';
+    document.getElementById('prev-badge').textContent = '';
+    document.getElementById('prev-badge').className = 'preview-badge';
+    document.getElementById('prev-desc-texto').textContent = 'Digite as notas para ver a prévia';
+    document.getElementById('prev-avs-restantes').textContent = '';
+    document.getElementById('prev-bar').style.width = '0%';
+    preview.className = 'preview-wrap visible';
+    return;
+  }
+
+  const pesoRestante = restantes.reduce((s,k) => s + PESOS[k], 0);
+  const notaAtual = comNota.reduce((s,k) => s + notas[k] * PESOS[k], 0);
+
+  const numEl = document.getElementById('prev-numero');
+  const badgeEl = document.getElementById('prev-badge');
+  const descEl = document.getElementById('prev-desc-texto');
+  const avsEl = document.getElementById('prev-avs-restantes');
+  const barEl = document.getElementById('prev-bar');
+
+  // Caso todas as notas ativas estão preenchidas e não restam mais → média final
+  if (restantes.length === 0 && comNota.length === 4) {
+    const media = notaAtual;
+    const st = media >= META ? 'aprovado' : 'reprovado';
+    numEl.textContent = media.toFixed(2);
+    numEl.className = 'preview-numero ' + st;
+    badgeEl.textContent = st === 'aprovado' ? 'Aprovado' : 'Reprovado';
+    badgeEl.className = 'preview-badge ' + st;
+    descEl.textContent = 'Média final com todas as notas';
+    avsEl.textContent = '';
+    barEl.style.width = Math.min(100, (media/10)*100) + '%';
+    barEl.className = 'preview-bar-fill ' + st;
+    preview.className = 'preview-wrap visible ' + st;
+    return;
+  }
+
+  // Calcula nota necessária
+  if (pesoRestante === 0) return;
+  const restante = META - notaAtual;
+  const notaNec = restante / pesoRestante;
+
+  let st, texto, descTxt;
+  const avsRestantesNomes = restantes.map(k => k.toUpperCase()).join(', ');
+
+  if (notaNec <= 0) {
+    st = 'aprovado';
+    numEl.textContent = '—';
+    badgeEl.textContent = 'Já aprovado';
+    descTxt = 'Média mín. garantida mesmo zerando o resto';
+  } else if (notaNec > 10) {
+    st = 'reprovado';
+    numEl.textContent = '>' + ' 10';
+    badgeEl.textContent = 'Impossível';
+    descTxt = 'Não é possível atingir 7.0';
+  } else {
+    st = 'aviso';
+    numEl.textContent = notaNec.toFixed(2);
+    badgeEl.textContent = 'Ainda possível';
+    descTxt = 'necessário em: ' + avsRestantesNomes;
+  }
+
+  numEl.className = 'preview-numero ' + (st === 'aviso' ? 'aviso' : st);
+  badgeEl.className = 'preview-badge ' + (st === 'reprovado' ? 'reprovado' : st === 'aprovado' ? 'aprovado' : 'aviso');
+  descEl.textContent = descTxt;
+  avsEl.textContent = restantes.length > 0 ? restantes.length + ' av. restante' + (restantes.length > 1 ? 's' : '') : '';
+
+  const barPct = notaNec <= 0 ? 100 : notaNec > 10 ? 100 : Math.min(100, (notaNec/10)*100);
+  barEl.style.width = barPct + '%';
+  barEl.className = 'preview-bar-fill ' + (st === 'aviso' ? 'aviso' : st === 'aprovado' ? 'aprovado' : 'reprovado');
+  preview.className = 'preview-wrap visible ' + (st === 'aviso' ? '' : st);
+}
+
+function getVal(id) {
+  const v = parseFloat(document.getElementById(id).value);
+  return isNaN(v) ? null : v;
+}
+
+function clamp(v) { return Math.min(10, Math.max(0, v)); }
+
+function calcularMedia() {
+  const notas = {
+    av1: getVal('m-av1'), av2: getVal('m-av2'),
+    av3: getVal('m-av3'), edag: getVal('m-edag')
+  };
+  const materia = document.getElementById('m-materia').value.trim() || 'Matéria sem nome';
+  if (Object.values(notas).some(v => v === null)) { showToast('Preencha todas as notas'); return; }
+
+  const media = Object.keys(notas).reduce((s, k) => s + notas[k] * PESOS[k], 0);
+  const status = media >= META ? 'aprovado' : 'reprovado';
+
+  mostrarResultadoMedia(materia, media, notas, status);
+  adicionarHistorico(materia, media, status, 'média');
+}
+
+function mostrarResultadoMedia(materia, media, notas, status) {
+  const card = document.getElementById('resultado-media');
+  card.style.display = 'block';
+  card.className = 'resultado-card ' + status;
+
+  document.getElementById('rmed-materia').textContent = materia.toUpperCase();
+  const valorEl = document.getElementById('rmed-valor');
+  valorEl.textContent = media.toFixed(2);
+  valorEl.className = 'res-media-valor ' + status;
+
+  const statusEl = document.getElementById('rmed-status');
+  statusEl.className = 'res-status ' + status;
+  statusEl.textContent = status === 'aprovado' ? 'Aprovado' : 'Reprovado';
+
+  const bd = document.getElementById('rmed-breakdown');
+  bd.innerHTML = ['av1','av2','av3','edag'].map(k => {
+    const v = notas ? notas[k] : null;
+    return `<div class="breakdown-item">
+      <span class="bd-tag">${k.toUpperCase()}</span>
+      <span class="bd-val ${v===null?'vazio':''}">${v !== null ? v.toFixed(1) : '—'}</span>
+    </div>`;
+  }).join('');
+
+  const pct = Math.min(100, (media / 10) * 100);
+  const bar = document.getElementById('rmed-bar');
+  setTimeout(() => {
+    bar.style.width = pct + '%';
+    bar.className = 'progress-bar-fill ' + status;
+  }, 50);
+
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function simularNota() {
+  const materia = document.getElementById('s-materia').value.trim() || 'Matéria sem nome';
+  const notas = {};
+  for (const av of ['av1','av2','av3','edag']) {
+    if (toggles[av]) {
+      const v = getVal('s-' + av);
+      if (v === null) { showToast('Preencha a nota de ' + av.toUpperCase()); return; }
+      notas[av] = clamp(v);
+    }
+  }
+
+  const card = document.getElementById('resultado-sim');
+  const conteudo = document.getElementById('rsim-conteudo');
+  card.style.display = 'block';
+  document.getElementById('rsim-materia').textContent = materia.toUpperCase();
+
+  // Se tem todas as notas → calcula direto
+  if (Object.keys(notas).length === 4) {
+    const media = Object.keys(notas).reduce((s, k) => s + notas[k] * PESOS[k], 0);
+    const status = media >= META ? 'aprovado' : 'reprovado';
+    card.className = 'resultado-card ' + status;
+    conteudo.innerHTML = `
+      <div class="res-media-label">Média final</div>
+      <div class="res-media-valor ${status}">${media.toFixed(2)}</div>
+      <div class="res-status ${status}">${status === 'aprovado' ? 'Aprovado' : 'Reprovado'}</div>
+    `;
+    adicionarHistorico(materia, media, status, 'completo');
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    return;
+  }
+
+  if (Object.keys(notas).length === 0) { showToast('Ative pelo menos uma nota que você tem'); return; }
+
+  // Calcula nota necessária
+  const pesoRestante = ['av1','av2','av3','edag'].filter(k => !(k in notas)).reduce((s,k) => s + PESOS[k], 0);
+  const notaAtual = Object.keys(notas).reduce((s,k) => s + notas[k] * PESOS[k], 0);
+  const restante = META - notaAtual;
+  const notaNecessaria = restante / pesoRestante;
+
+  let status, cls;
+  if (notaNecessaria > 10) { status = 'aviso'; cls = 'impossivel'; }
+  else if (notaNecessaria <= 0) { status = 'aprovado'; cls = 'facil'; }
+  else { status = 'aviso'; cls = ''; }
+
+  card.className = 'resultado-card ' + status;
+
+  let msg;
+  if (notaNecessaria <= 0) {
+    msg = `Você já está aprovado! Com as notas atuais, sua média mínima é <span class="nota-destaque facil">${notaAtual.toFixed(2)}</span>, mesmo zerando o restante.`;
+  } else if (notaNecessaria > 10) {
+    msg = `Infelizmente não é mais possível atingir a média 7.0. Precisaria de <span class="nota-destaque impossivel">${notaNecessaria.toFixed(2)}</span> nas avaliações restantes, acima do máximo.`;
+  } else {
+    const avsRestantes = ['av1','av2','av3','edag'].filter(k => !(k in notas)).map(k => k.toUpperCase()).join(', ');
+    msg = `Para atingir a média <strong>7.0</strong>, você precisa de no mínimo <span class="nota-destaque">${notaNecessaria.toFixed(2)}</span> nas avaliações restantes (${avsRestantes}).`;
+  }
+
+  conteudo.innerHTML = `
+    <div class="res-media-label">Nota necessária nas restantes</div>
+    <div class="res-media-valor neutro">${notaNecessaria > 10 ? '> 10' : notaNecessaria <= 0 ? '—' : notaNecessaria.toFixed(2)}</div>
+    <div class="res-status ${status}">${notaNecessaria <= 0 ? 'Já aprovado' : notaNecessaria > 10 ? 'Impossível' : 'Ainda possível'}</div>
+    <div class="res-sim-msg">${msg}</div>
+  `;
+
+  adicionarHistorico(materia, notaNecessaria, status, 'simulação');
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function adicionarHistorico(materia, valor, status, tipo) {
+  historico.unshift({ materia, valor, status, tipo });
+  renderHistorico();
+}
+
+function renderHistorico() {
+  const list = document.getElementById('historico-list');
+  document.getElementById('hist-count').textContent = historico.length + (historico.length === 1 ? ' cálculo' : ' cálculos');
+  if (historico.length === 0) {
+    list.innerHTML = '<div class="empty-hist">Nenhum cálculo realizado ainda.</div>';
+    return;
+  }
+  list.innerHTML = historico.map(h => `
+    <div class="hist-item">
+      <span class="hist-dot ${h.status}"></span>
+      <span class="hist-materia">${h.materia}</span>
+      <span class="hist-media ${h.status}">${typeof h.valor === 'number' ? h.valor.toFixed(2) : h.valor}</span>
+      <span class="hist-tipo">${h.tipo}</span>
+    </div>
+  `).join('');
+}
+
+function limparHistorico() {
+  historico = [];
+  renderHistorico();
+  showToast('Histórico apagado');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// Init: todos desabilitados
+['av1','av2','av3','edag'].forEach(av => {
+  const field = document.getElementById('sf-' + av);
+  const input = document.getElementById('s-' + av);
+  field.classList.add('disabled');
+  input.disabled = true;
+  // Atualiza preview ao digitar
+  input.addEventListener('input', atualizarPreview);
+});
+</script>
+</body>
+</html>
