@@ -1,30 +1,64 @@
-# SenaiNotas  
-📘 **Calculadora nada abstrata**  
+# SenaiNotas 📘
 
-**SenaiNotas** é uma aplicação simples e prática em Python, desenvolvida para auxiliar estudantes do Senai Cimatec a calcular suas médias nas disciplinas da faculdade.  
-
-Com ela, você pode calcular a média final a partir de todas as notas informadas ou simular a nota necessária nas avaliações restantes para atingir a média mínima de aprovação (7.0).  
-
-Além disso, todos os resultados são salvos automaticamente em um arquivo `.txt` para consulta futura.
+Calculadora de médias para estudantes do **Senai Cimatec**, com interface web moderna e prévia em tempo real.
 
 ---
 
-## 🛠️ Funcionalidades  
+## ✨ Funcionalidades
 
-- 📊 **Cálculo da média final**  
-  Informe as notas das avaliações (AV1, AV2, AV3, EDAG) e obtenha sua média final automaticamente.  
-
-- 📈 **Simulação de nota necessária**  
-  Caso ainda não tenha todas as notas, o sistema calcula a nota que você precisa tirar nas avaliações restantes para ser aprovado.  
-
-- 📁 **Histórico de resultados**  
-  Todos os cálculos são registrados em um arquivo `resultados.txt`, organizados pelo nome da disciplina informada pelo usuário.  
-
-- 🧾 **Organização por disciplina**  
-  Cada cálculo fica associado ao nome da matéria, facilitando o acompanhamento dos seus resultados.
+- **Calcular média final** — insira as 4 notas e obtenha a média ponderada instantaneamente
+- **Simular nota necessária** — ative só as notas que você já tem e veja em tempo real o mínimo necessário nas avaliações restantes
+- **Prévia ao vivo** — o resultado atualiza a cada tecla digitada, sem precisar clicar em nada
+- **Histórico da sessão** — todos os cálculos ficam registrados durante o uso
+- **100% offline** — nenhuma dependência de servidor, funciona direto no navegador
 
 ---
 
-## Autor  
+## 🧮 Sistema de pesos
 
-**Alexandre Del Raso Filho**
+| Avaliação | Peso |
+|-----------|------|
+| AV1       | 25%  |
+| AV2       | 25%  |
+| AV3       | 30%  |
+| EDAG      | 20%  |
+
+> Média mínima para aprovação: **7.0**
+
+---
+
+## 🚀 Como usar
+
+### Interface web (recomendado)
+
+Abra o arquivo `index.html` direto no navegador — sem instalar nada.
+
+```bash
+# Ou, se preferir um servidor local:
+python3 -m http.server 8000
+# Acesse: http://localhost:8000
+```
+
+### Script Python (terminal)
+
+```bash
+python3 backend.py
+```
+
+---
+
+## 📁 Estrutura do projeto
+
+```
+SenaiNotas/
+├── index.html   # Interface web completa (frontend)
+├── backend.py   # Script original em Python (terminal)
+└── README.md
+```
+
+---
+
+## Autor
+
+**Alexandre Del Raso Filho**  
+Senai Cimatec
