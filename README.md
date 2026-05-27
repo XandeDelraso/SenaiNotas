@@ -29,23 +29,7 @@ Calculadora de médias para estudantes do **Senai Cimatec**, com interface web m
 
 ## 🚀 Como usar
 
-### Interface web (recomendado)
-
-Abra o arquivo `index.html` direto no navegador — sem instalar nada.
-
-```bash
-# Ou, se preferir um servidor local:
-python3 -m http.server 8000
-# Acesse: http://localhost:8000
-```
-
-### Script Python (terminal)
-
-```bash
-python3 backend.py
-```
-
----
+Acesse diretamente no site: https://notacimatec.vercel.app/
 
 ## 📁 Estrutura do projeto
 
@@ -61,4 +45,3 @@ SenaiNotas/
 ## Autor
 
 **Alexandre Del Raso Filho**  
-Senai Cimatec
