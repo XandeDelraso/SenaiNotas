@@ -872,8 +872,20 @@
 <script>
 const PESOS = { av1: 0.25, av2: 0.25, av3: 0.30, edag: 0.20 };
 const META = 7.0;
+const API_BASE = '';
 let historico = [];
 let toggles = { av1: false, av2: false, av3: false, edag: false };
+
+async function postApi(endpoint, payload) {
+  const res = await fetch(API_BASE + endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.erro || 'Erro ao processar requisição');
+  return data;
+}
 
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (tab === 'media' && i===0)||(tab === 'simular' && i===1)));
@@ -1006,7 +1018,7 @@ function getVal(id) {
 
 function clamp(v) { return Math.min(10, Math.max(0, v)); }
 
-function calcularMedia() {
+async function calcularMedia() {
   const notas = {
     av1: getVal('m-av1'), av2: getVal('m-av2'),
     av3: getVal('m-av3'), edag: getVal('m-edag')
@@ -1014,11 +1026,13 @@ function calcularMedia() {
   const materia = document.getElementById('m-materia').value.trim() || 'Matéria sem nome';
   if (Object.values(notas).some(v => v === null)) { showToast('Preencha todas as notas'); return; }
 
-  const media = Object.keys(notas).reduce((s, k) => s + notas[k] * PESOS[k], 0);
-  const status = media >= META ? 'aprovado' : 'reprovado';
-
-  mostrarResultadoMedia(materia, media, notas, status);
-  adicionarHistorico(materia, media, status, 'média');
+  try {
+    const resultado = await postApi('/api/calcular_media', { notas });
+    mostrarResultadoMedia(materia, resultado.media, notas, resultado.status);
+    adicionarHistorico(materia, resultado.media, resultado.status, 'média');
+  } catch (erro) {
+    showToast(erro.message);
+  }
 }
 
 function mostrarResultadoMedia(materia, media, notas, status) {
@@ -1054,7 +1068,7 @@ function mostrarResultadoMedia(materia, media, notas, status) {
   card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-function simularNota() {
+async function simularNota() {
   const materia = document.getElementById('s-materia').value.trim() || 'Matéria sem nome';
   const notas = {};
   for (const av of ['av1','av2','av3','edag']) {
@@ -1070,55 +1084,55 @@ function simularNota() {
   card.style.display = 'block';
   document.getElementById('rsim-materia').textContent = materia.toUpperCase();
 
-  // Se tem todas as notas → calcula direto
-  if (Object.keys(notas).length === 4) {
-    const media = Object.keys(notas).reduce((s, k) => s + notas[k] * PESOS[k], 0);
-    const status = media >= META ? 'aprovado' : 'reprovado';
+  try {
+    const resultado = await postApi('/api/simular_nota', { notas });
+
+    if (resultado.tipo === 'completo') {
+      const media = resultado.media;
+      const status = resultado.status;
+      card.className = 'resultado-card ' + status;
+      conteudo.innerHTML = `
+        <div class="res-media-label">Média final</div>
+        <div class="res-media-valor ${status}">${media.toFixed(2)}</div>
+        <div class="res-status ${status}">${status === 'aprovado' ? 'Aprovado' : 'Reprovado'}</div>
+      `;
+      adicionarHistorico(materia, media, status, 'completo');
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      return;
+    }
+
+    const notaNecessaria = resultado.nota_necessaria;
+    const notaAtual = resultado.nota_atual;
+
+    let status, cls;
+    if (notaNecessaria > 10) { status = 'aviso'; cls = 'impossivel'; }
+    else if (notaNecessaria <= 0) { status = 'aprovado'; cls = 'facil'; }
+    else { status = 'aviso'; cls = ''; }
+
     card.className = 'resultado-card ' + status;
+
+    let msg;
+    if (notaNecessaria <= 0) {
+      msg = `Você já está aprovado! Com as notas atuais, sua média mínima é <span class="nota-destaque facil">${notaAtual.toFixed(2)}</span>, mesmo zerando o restante.`;
+    } else if (notaNecessaria > 10) {
+      msg = `Infelizmente não é mais possível atingir a média 7.0. Precisaria de <span class="nota-destaque impossivel">${notaNecessaria.toFixed(2)}</span> nas avaliações restantes, acima do máximo.`;
+    } else {
+      const avsRestantes = ['av1','av2','av3','edag'].filter(k => !(k in notas)).map(k => k.toUpperCase()).join(', ');
+      msg = `Para atingir a média <strong>7.0</strong>, você precisa de no mínimo <span class="nota-destaque">${notaNecessaria.toFixed(2)}</span> nas avaliações restantes (${avsRestantes}).`;
+    }
+
     conteudo.innerHTML = `
-      <div class="res-media-label">Média final</div>
-      <div class="res-media-valor ${status}">${media.toFixed(2)}</div>
-      <div class="res-status ${status}">${status === 'aprovado' ? 'Aprovado' : 'Reprovado'}</div>
+      <div class="res-media-label">Nota necessária nas restantes</div>
+      <div class="res-media-valor neutro">${notaNecessaria > 10 ? '> 10' : notaNecessaria <= 0 ? '—' : notaNecessaria.toFixed(2)}</div>
+      <div class="res-status ${status}">${notaNecessaria <= 0 ? 'Já aprovado' : notaNecessaria > 10 ? 'Impossível' : 'Ainda possível'}</div>
+      <div class="res-sim-msg">${msg}</div>
     `;
-    adicionarHistorico(materia, media, status, 'completo');
+
+    adicionarHistorico(materia, notaNecessaria, status, 'simulação');
     card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    return;
+  } catch (erro) {
+    showToast(erro.message);
   }
-
-  if (Object.keys(notas).length === 0) { showToast('Ative pelo menos uma nota que você tem'); return; }
-
-  // Calcula nota necessária
-  const pesoRestante = ['av1','av2','av3','edag'].filter(k => !(k in notas)).reduce((s,k) => s + PESOS[k], 0);
-  const notaAtual = Object.keys(notas).reduce((s,k) => s + notas[k] * PESOS[k], 0);
-  const restante = META - notaAtual;
-  const notaNecessaria = restante / pesoRestante;
-
-  let status, cls;
-  if (notaNecessaria > 10) { status = 'aviso'; cls = 'impossivel'; }
-  else if (notaNecessaria <= 0) { status = 'aprovado'; cls = 'facil'; }
-  else { status = 'aviso'; cls = ''; }
-
-  card.className = 'resultado-card ' + status;
-
-  let msg;
-  if (notaNecessaria <= 0) {
-    msg = `Você já está aprovado! Com as notas atuais, sua média mínima é <span class="nota-destaque facil">${notaAtual.toFixed(2)}</span>, mesmo zerando o restante.`;
-  } else if (notaNecessaria > 10) {
-    msg = `Infelizmente não é mais possível atingir a média 7.0. Precisaria de <span class="nota-destaque impossivel">${notaNecessaria.toFixed(2)}</span> nas avaliações restantes, acima do máximo.`;
-  } else {
-    const avsRestantes = ['av1','av2','av3','edag'].filter(k => !(k in notas)).map(k => k.toUpperCase()).join(', ');
-    msg = `Para atingir a média <strong>7.0</strong>, você precisa de no mínimo <span class="nota-destaque">${notaNecessaria.toFixed(2)}</span> nas avaliações restantes (${avsRestantes}).`;
-  }
-
-  conteudo.innerHTML = `
-    <div class="res-media-label">Nota necessária nas restantes</div>
-    <div class="res-media-valor neutro">${notaNecessaria > 10 ? '> 10' : notaNecessaria <= 0 ? '—' : notaNecessaria.toFixed(2)}</div>
-    <div class="res-status ${status}">${notaNecessaria <= 0 ? 'Já aprovado' : notaNecessaria > 10 ? 'Impossível' : 'Ainda possível'}</div>
-    <div class="res-sim-msg">${msg}</div>
-  `;
-
-  adicionarHistorico(materia, notaNecessaria, status, 'simulação');
-  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function adicionarHistorico(materia, valor, status, tipo) {

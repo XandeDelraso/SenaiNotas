@@ -1,6 +1,6 @@
 # SenaiNotas 📘
 
-Calculadora de médias para estudantes do **Senai Cimatec**, com interface web moderna e prévia em tempo real.
+Calculadora de médias para estudantes do **Senai Cimatec**, com interface web moderna e lógica de cálculo em Python.
 
 ---
 
@@ -10,7 +10,7 @@ Calculadora de médias para estudantes do **Senai Cimatec**, com interface web m
 - **Simular nota necessária** — ative só as notas que você já tem e veja em tempo real o mínimo necessário nas avaliações restantes
 - **Prévia ao vivo** — o resultado atualiza a cada tecla digitada, sem precisar clicar em nada
 - **Histórico da sessão** — todos os cálculos ficam registrados durante o uso
-- **100% offline** — nenhuma dependência de servidor, funciona direto no navegador
+- **Frontend + Backend** — a interface web consome a lógica do `backend.py` via API
 
 ---
 
@@ -29,7 +29,14 @@ Calculadora de médias para estudantes do **Senai Cimatec**, com interface web m
 
 ## 🚀 Como usar
 
-Acesse diretamente no site: https://notacimatec.vercel.app/
+1. Inicie o backend:
+   ```bash
+   python backend.py --modo server
+   ```
+2. Abra no navegador:
+   ```
+   http://127.0.0.1:8000
+   ```
 
 ## 📁 Estrutura do projeto
 
